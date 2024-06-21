@@ -15,7 +15,7 @@
         "vite": "^5.0"
     },
     "dependencies": {
-        "@barba/core": "^2.9.7",
+        "@barba/core": "^2.10.0",
         "@material-tailwind/html": "^2.2.2",
         "flatpickr": "^4.6.13",
         "gsap": "^3.12.5"

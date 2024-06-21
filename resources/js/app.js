@@ -1,5 +1,5 @@
-import Barba from "@barba/core";
-import gsap from "gsap";
+// import Barba from "@barba/core";
+// import gsap from "gsap";
 
 document.addEventListener('DOMContentLoaded', () => {
   // Register service worker
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   navJs(); // Navigation is for every page
   searchJs(); // Search is for every page
 
-  Barba.init({
+  barba.init({
     views: [{
       namespace: 'home',
       afterEnter(data) {

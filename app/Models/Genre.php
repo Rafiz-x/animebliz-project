@@ -10,4 +10,9 @@ class Genre extends Model
     use HasFactory;
     
     protected $table = 'genre';
+
+    public function posts()
+    {
+        return $this->belongsToMany(Post::class, 'post_genre', 'genre_id', 'post_id');
+    }
 }

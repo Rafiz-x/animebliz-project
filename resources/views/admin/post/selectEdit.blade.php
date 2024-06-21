@@ -1,20 +1,19 @@
 @php
-    $namespace = 'post_all';
+    $namespace = 'post_edit_select';
 @endphp
 
 @extends('admin.layout')
 
-@section('title', 'All Post(s)')
+@section('title', 'Edit Post')
 
-@section('name', 'post.all')
+@section('name', 'admin.post.edit')
 
 @section('content')
+    <div class="select_edit_post mx-auto w-fit max-w-full overflow-hidden">
 
-    <div class="all_post mx-auto w-fit max-w-full overflow-hidden">
-
-        <div class="search_filter my-2 flex flex-col sm:flex-row justify-start gap-2 sm:gap-5 items-center">
+        <div class="search_filter w-full my-2 flex flex-col sm:flex-row justify-start gap-2 sm:gap-5 items-center">
             <div class="filter mx-2 flex items-center gap-2 text-white">
-                <span class="bg-slate-700 px-5 py-2.5 rounded-md">Sort By</span>
+                <span class="sm:text-nowrap bg-slate-700 px-5 py-2.5 rounded-md">Sort By</span>
                 <select name="filter" id="filter">
                     <option value="published">Published</option>
                     <option value="not_published">Not Published</option>
@@ -54,27 +53,10 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto w-full customScrollbar">
-            <div class="table w-fit">
-
-                <x-filtered-post :posts="$posts" />
-
-            </div>
+        <div class="result">
+            <x-filtered-edit-post :posts="$posts" />
         </div>
 
-        <div class="fixed checkBoxDelete p-4 rounded-md text-white bg-slate-700 -bottom-20 left-[50%] -translate-x-[50%] flex items-center gap-3">
-            <span class="cursor-default">Delete Selected</span>
-            <div
-                class="deleteSelected bg-rose-500 hover:bg-rose-400 transition-colors text-white size-10 rounded-md flex item-center justify-center cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="size-6 m-auto pointer-events-none">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                </svg>
-            </div>
-        </div>
     </div>
-
-
 
 @endsection

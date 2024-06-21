@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (urlParams.has('redir')) {
                     window.location.replace(urlParams.get('redir'));
                 } else {
-                    window.location.replace('/admin');
+                    window.location.replace('/admin/dashboard');
                 }
 
 

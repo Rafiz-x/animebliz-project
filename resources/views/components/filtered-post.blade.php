@@ -49,7 +49,7 @@
 
                             $published = $post->publish ? 'Yes' : 'No';
                         @endphp
-                        <img src="{{ $poster }}" alt="">
+                        <img src="{{ $poster }}" alt="{{ $post->title }}">
                     </td>
                     <td class="p-4 text-left">{{ $post->title }}</td>
                     <td class="p-4 text-left">{{ $post->slug }}</td>

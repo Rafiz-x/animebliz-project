@@ -1613,6 +1613,20 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
                 },
             },
+            {
+                namespace: "post_edit_select",
+                afterEnter(data) {
+                    selectEditPost();
+
+                },
+            },
+            {
+                namespace: "post_edit",
+                afterEnter(data) {
+                    editPost();
+
+                },
+            },
         ],
         prevent: ({ el }) => {
             return el.classList.contains('prevent-barba') || el.closest('[role="navigation"]');
@@ -1661,6 +1675,8 @@ document.addEventListener("DOMContentLoaded", (e) => {
     window.barba = Barba;
 
     $(".loading-overlay").addClass("hidden");
+    $('.sidebarArrow ').click();
+
 });
 
 function allPost() {
@@ -1784,7 +1800,6 @@ function allPost() {
         anchors.forEach(anchor => {
             anchor.addEventListener('click', e => {
                 e.preventDefault();
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
                 let href = anchor.href;
                 let page = href.split("page=")[1];
                 let searchVal = encodeURIComponent(search.val());
@@ -1819,14 +1834,14 @@ function allPost() {
     //     search.trigger("input");
     // });
     function fetchPosts(search, filter, page) {
-        // wholePageLoader("on");
+        wholePageLoader("on");
+        gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
         $.ajax({
             url: `/admin/post/?search=${search}&filter=${filter}&page=${page}`,
             type: "GET",
             success: function (res) {
                 wholePageLoader("off");
                 $(".table").html(res.html);
-
                 reCallFuntions();
 
             },
@@ -1860,10 +1875,526 @@ function allPost() {
     reCallFuntions();
 }
 
+function selectEditPost() {
+    const search = $("#post_search");
+    const filter = $(".select_edit_post select");
+
+    filter.select2();
+
+    function fetchPosts(search, filter, page) {
+        wholePageLoader("on");
+        $.ajax({
+            url: `/admin/post/edit?search=${search}&filter=${filter}&page=${page}`,
+            type: "GET",
+            success: function (res) {
+                wholePageLoader("off");
+                $(".select_edit_post .result").html(res.html);
+                reCallFuntions();
+
+            },
+            error: function (xhr, status, error) {
+                wholePageLoader("off");
+                gsapAlert("Error Occured with status:" + xhr.status);
+            },
+        });
+    }
+
+    function paginationLinkListener() {
+        let anchors = document.body.querySelectorAll(".select_edit_post [role=navigation] a");
+
+        // Loop through each anchor
+        anchors.forEach(anchor => {
+            anchor.addEventListener('click', e => {
+                e.preventDefault();
+                let href = anchor.href;
+                let page = href.split("page=")[1];
+                let searchVal = encodeURIComponent(search.val());
+                let filterVal = encodeURIComponent(filter.val());
+                fetchPosts(searchVal, filterVal, page);
+            });
+        });
+    }
+
+    search.on("input", (e) => {
+        const searchVal = encodeURIComponent($(e.target).val());
+        const filterVal = encodeURIComponent(filter.val());
+        fetchPosts(searchVal, filterVal, 1);
+    });
+
+    filter.on("change", () => {
+        search.trigger("input");
+    });
+
+
+
+    function reCallFuntions() {
+        paginationLinkListener();
+    }
+
+    reCallFuntions();
+}
+
+
+function editPost() {
+    const apiInputBtns = document.body.querySelectorAll(
+        ".api .boxes div .field .input input"
+    );
+
+    apiInputBtns.forEach((e) => {
+        let inputClear = e.nextElementSibling;
+
+        e.addEventListener("input", (ev) => {
+            inputClearShow(e, inputClear);
+        });
+        inputClear.addEventListener("click", (ev) => {
+            clearInput(e, inputClear);
+        });
+    });
+
+    const apiBtns = document.body.querySelectorAll(".api .options span");
+    const apiBoxes = document.body.querySelectorAll(".api .boxes > div");
+
+    const apiImportBtns = document.body.querySelectorAll(
+        ".api .boxes .actions button.import"
+    );
+
+    apiBtns.forEach((btn) => {
+        btn.addEventListener("click", (x) => {
+            if (x.target.dataset.api == "imdb") {
+                gsapAlert(
+                    "Scrapping with IMDB link is currently disabled!",
+                    "red",
+                    1
+                );
+            }
+
+            if (!btn.classList.contains("active")) {
+                apiBoxes.forEach((box) => {
+                    if (box.dataset.api != btn.dataset.api) {
+                        box.classList.add("hidden");
+                    } else {
+                        box.classList.remove("hidden");
+                    }
+                });
+
+                apiBtns.forEach((elem) => {
+                    if (elem != btn) {
+                        elem.classList.remove("active");
+                    } else {
+                        elem.classList.add("active");
+                    }
+                });
+
+                try {
+                    // Remove Previous Class
+                    $(".form").removeClass("tmdb");
+                    $(".form").removeClass("imdb");
+                    $(".form").removeClass("jikan");
+                    //Add Curent API Class
+                    $(".form").addClass(btn.dataset.api);
+                } catch (error) { }
+            }
+        });
+    });
+
+    apiImportBtns.forEach((node) => {
+        if (node.dataset.api == "tmdb") {
+            node.addEventListener("click", (event) => {
+                let input = document.querySelector(
+                    ".api .boxes .tmdb .input input"
+                );
+                let url = input.value;
+
+                if (url.length == 0) {
+                    gsapAlert("Please paste a link!");
+                    return;
+                }
+                node.setAttribute("disabled", "true");
+
+                let info = getTmdbID(url);
+
+                if (info) {
+                    ajaxGet(
+                        "//" +
+                        location.host +
+                        `/api/tmdb/${info.type}/${info.id}`
+                    )
+                        .then((res) => {
+                            if (res.status == 200) {
+                                var result = res.json;
+                                if (result.status == false) {
+                                    gsapAlert(result);
+                                } else {
+                                    TmdbResponseHandle(result);
+                                }
+                            } else {
+                                gsapAlert(
+                                    "Request failed with status: " + res.status,
+                                    "red"
+                                );
+                            }
+                            node.removeAttribute("disabled");
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                            gsapAlert(error, "red");
+                            node.removeAttribute("disabled");
+                        });
+                } else {
+                    node.removeAttribute("disabled");
+                    gsapAlert("Paste a valid URL", "red");
+                }
+            });
+        } else if (node.dataset.api == "imdb") {
+            node.addEventListener("click", (event) => {
+                gsapAlert(
+                    "Scrapping with IMDB link is currently disabled!",
+                    "red"
+                );
+                return;
+
+                let input = document.querySelector(
+                    ".api .boxes .imdb .input input"
+                );
+                let url = input.value;
+
+                if (url.length == 0) {
+                    gsapAlert("Please paste a link!");
+                    return;
+                }
+                node.setAttribute("disabled", "true");
+
+                let id = getImdbID(url);
+
+                if (id) {
+                    //CHecking if url exist
+                    ajaxGet(`//${location.host}/api/imdb/check/${id}`)
+                        .then((res) => {
+                            if (res.status != 200) {
+                                gsapAlert(
+                                    "Request failed with status: " + res.status,
+                                    "red"
+                                );
+                            } else {
+                                // Sending request to scrape data
+                                ajaxGet(`//${location.host}/api/imdb/${id}`)
+                                    .then((res) => {
+                                        if (res.status == 200) {
+                                            var result = res.json;
+                                            if (result.success) {
+                                                ImdbResponseHandle(result, id);
+                                            } else {
+                                                gsapAlert(result);
+                                            }
+                                        } else {
+                                            gsapAlert(
+                                                "Request failed with status: " +
+                                                res.status,
+                                                "red"
+                                            );
+                                        }
+                                        node.removeAttribute("disabled");
+                                    })
+                                    .catch((error) => {
+                                        gsapAlert(error, "red");
+                                        node.removeAttribute("disabled");
+                                    });
+                            }
+                        })
+                        .catch((error) => {
+                            gsapAlert(error, "red");
+                            node.removeAttribute("disabled");
+                        });
+                } else {
+                    node.removeAttribute("disabled");
+                    gsapAlert("Paste a valid URL", "red");
+                }
+            });
+        } else if (node.dataset.api == "jikan") {
+            node.addEventListener("click", (event) => {
+                let input = document.querySelector(
+                    ".api .boxes .jikan .input input"
+                );
+                let url = input.value;
+
+                if (url.length == 0) {
+                    gsapAlert("Please paste a link!");
+                    return;
+                }
+                node.setAttribute("disabled", "true");
+
+                let id = getMalId(url);
+
+                if (id) {
+                    ajaxGet("https://api.jikan.moe/v4/anime/" + id)
+                        .then((res) => {
+                            var result = res.json;
+                            if (result.data) {
+                                if (result.status == false) {
+                                    gsapAlert(result);
+                                } else {
+                                    JikanResponseHandle(result);
+                                }
+                            } else {
+                                gsapAlert(
+                                    "Request failed with status: " + res.status,
+                                    "red"
+                                );
+                            }
+                            node.removeAttribute("disabled");
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                            gsapAlert(error, "red");
+                            node.removeAttribute("disabled");
+                        });
+                } else {
+                    node.removeAttribute("disabled");
+                    gsapAlert("Paste a valid URL", "red");
+                }
+            });
+        }
+    });
+
+    $(".api .boxes .field input").on("keypress", function (e) {
+        if (e.which === 13 || e.keyCode === 13) {
+            // Check if Enter key is pressed
+            $(this).closest(".field").find(".actions button").click();
+        }
+    });
+
+    let modalCheckBoxes = $(".modal .part input[type=checkbox]");
+
+    modalCheckBoxes.each((index) => {
+        let checkbox = modalCheckBoxes[index];
+        $(checkbox).on("change", (e) => {
+            let input =
+                checkbox.parentElement.parentElement.querySelector("[name]");
+            if (e.target.checked) {
+                input.removeAttribute("disabled");
+            } else {
+                input.setAttribute("disabled", "");
+            }
+        });
+    });
+
+    $(".modal .actions .close").click((e) => {
+        if ($(".modal").attr("open") !== undefined) {
+            $(".modal").removeAttr("open");
+            $(".dialog_opener").replaceClass("block", "hidden");
+        }
+    });
+
+    $(".modal .actions .minimize").click((e) => {
+        if ($(".modal").attr("open") !== undefined) {
+            $(".modal").removeAttr("open");
+            $(".modal").attr("minimized", true);
+            $(".dialog_opener").replaceClass("hidden", "block");
+        }
+    });
+
+    $(".dialog_opener").click((e) => {
+        if ($(".modal").attr("open") === undefined) {
+            $(".modal").attr("open", true);
+            $(".dialog_opener").replaceClass("block", "hidden");
+        }
+    });
+
+    const fields = [
+        "imdb_id",
+        "tmdb_id",
+        "mal_id",
+        "poster_type",
+        "default_poster_url",
+        "large_poster_url",
+        "small_poster_url",
+        "poster_custom",
+        "backdrop_type",
+        "large_backdrop_url",
+        "small_backdrop_url",
+        "backdrop_custom",
+        "title",
+        "type",
+        "isAnime",
+        "synopsis",
+        "ratingType",
+        "rating",
+        "releaseDate",
+        "location",
+        "genre",
+        "category",
+    ];
+
+    $(".modal .form .select2").each(function () {
+        $(this).select2();
+    });
+
+    $("#mainForm .select2").each(function () {
+        $(this).select2();
+    });
+
+    $(".genre.select2").select2({
+        placeholder: "Select Genre(s)",
+    });
+
+    $(".category.select2").select2({
+        placeholder: "Select Category(s)",
+        height: "100px",
+    });
+
+    let releaseDate = flatpickr("[name=releaseDate]", {
+        enableTime: false,
+        dateFormat: "Y-m-d",
+    });
+
+    //? Modal Checkbox setting
+
+    let select_all_checkboxes = $(".modal #select_all_checkboxes");
+    let modalCheckBoxPoster = $(".modal #checkbox_poster");
+    let modalCheckBoxBackdrop = $(".modal #checkbox_backdrop");
+
+    modalCheckBoxPoster.click((e) => {
+        if ($(this).is(":checked")) {
+            $(".modal poster_upload_url")
+                .find("input[type=checkbox]")
+                .prop("checked", true);
+        } else {
+            $(".modal poster_upload_url")
+                .find("input[type=checkbox]")
+                .prop("checked", false);
+        }
+    });
+
+    modalCheckBoxBackdrop.click((e) => {
+        if ($(this).is(":checked")) {
+            $(".modal backdrop_upload_url")
+                .find("input[type=checkbox]")
+                .prop("checked", true);
+        } else {
+            $(".modal backdrop_upload_url")
+                .find("input[type=checkbox]")
+                .prop("checked", false);
+        }
+    });
+
+    $("#modalChangeBtn").click((e) => {
+        fields.forEach(function (field) {
+            var modalFormField =
+                select('.modal form [name="' + field + '"]') ||
+                select('.modal form [name="' + field + '\\[\\]"]');
+            var mainFormField =
+                select('#mainForm [name="' + field + '"]') ||
+                select('#mainForm [name="' + field + '\\[\\]"]');
+
+            modalFormField = $(modalFormField);
+            mainFormField = $(mainFormField);
+
+            // if (modalFormInput.length && mainFormField.length) {
+            if (
+                modalFormField
+                    .parent()
+                    .find("input[type=checkbox]")
+                    .is(":checked")
+            ) {
+                // Checking The Checkbox if checked
+
+                if (modalFormField[0].tagName.toLowerCase() === "select") {
+                    mainFormField.val(modalFormField.val()).change();
+                } else {
+                    mainFormField.val(modalFormField.val()).trigger("input");
+                }
+            }
+            // }
+        });
+
+        // After copy finished
+        $(".modal .actions .close").click(); // To hide the modal Form
+    });
+
+    select_all_checkboxes.on("change", (e) => {
+        if (select_all_checkboxes.is(":checked")) {
+            modalCheckBoxes.prop("checked", true);
+            // select_all_checkboxes.siblings('span').html('Select All');
+        } else {
+            modalCheckBoxes.prop("checked", false);
+            // select_all_checkboxes.siblings('span').html('Unselect All');
+        }
+        modalCheckBoxes.change();
+    });
+
+    let mainForm = $(select("#mainForm"));
+
+    mainForm.on("submit", function (event) {
+        wholePageLoader("on"); // Turning on the page loader;
+
+        event.preventDefault(); // Prevent the form from submitting the default way
+        let formData = new FormData(this);
+        $.ajax({
+            url: mainForm.attr("action"),
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                wholePageLoader("off"); // Turning off the page loader
+
+                gsapAlert(res.msg, "green");
+            },
+            error: function (xhr, status, error) {
+                wholePageLoader("off"); // Turning off the page loader;
+
+                if (xhr.status == 422) {
+                    let errors = xhr.responseJSON;
+
+                    let style =
+                        Object.keys(errors).length > 1 ||
+                            errors[Object.keys(errors)[0]].length > 1
+                            ? "all: revert;"
+                            : ""; // Checking If the object has one key and that has one value
+
+                    let txt = `<ol style="${style}" class="flex flex-col gap-2 pr-2">`;
+
+                    for (const key in errors) {
+                        if (errors.hasOwnProperty(key)) {
+                            errors[key].forEach((error) => {
+                                txt += `<li class='pl-1'>${error}</li>`;
+                            });
+                        }
+                    }
+
+                    txt += "</ol>";
+                    gsapAlert(txt, "red", 4, true);
+                } else {
+                    gsapAlert(
+                        "Failed with error code: " + xhr.status + ` (${error})`,
+                        "red"
+                    );
+                }
+            },
+        });
+    });
+
+    // Map form fields to class properties
+    formSetting("#mainForm");
+    formSetting(".modal");
+
+    $(document).on('keyup', e => {
+        let event = e.originalEvent;
+        log(event);
+        if (event.keyCode === 13 && event.ctrlKey) {
+            mainForm.submit();
+        }
+    });
+
+    $('input[type=url]').trigger('input');
+}
+
+
+
+
+
 
 function allGenre() {
-
-
     const search = $("#genre_search");
     const filter = $(".search_filter select");
 
@@ -1925,13 +2456,9 @@ function allGenre() {
 
 
     function allGenreDeleteBtn() {
-        $(".all_genre table .delete").click((e) => {
+        $(".all_genre table .delete").off('click');
+        $(".all_genre table .delete").on('click', e => {
             let del = $(e.target);
-
-            if (!del.hasClass("delete")) {
-                gsapAlert("This is not a Delete button!", "red");
-                return;
-            }
 
             if (!del.attr("data-slug")) {
                 gsapAlert("Item Slug not found!", "red");
@@ -1988,32 +2515,8 @@ function allGenre() {
         });
     }
 
-    // search.on("input", (e) => {
-    //     wholePageLoader("on");
-    //     const searchVal = encodeURIComponent($(e.target).val());
-    //     const filterVal = encodeURIComponent(filter.val());
-
-    //     $.ajax({
-    //         url: `/admin/genre/?search=${searchVal}&filter=${filterVal}`,
-    //         type: "GET",
-    //         success: function (res) {
-    //             wholePageLoader("off");
-
-    //             $("tbody").html(res);
-    //             allGenreDeleteBtn();
-    //         },
-    //         error: function (xhr, status, error) {
-    //             wholePageLoader("off");
-    //             gsapAlert("Error Occured with status:" + xhr.status);
-    //         },
-    //     });
-    // });
-
-    // filter.on("change", () => {
-    //     search.trigger("input");
-    // });
     function fetchGenres(search, filter, page) {
-        // wholePageLoader("on");
+        wholePageLoader("on");
         $.ajax({
             url: `/admin/genre/?search=${search}&filter=${filter}&page=${page}`,
             type: "GET",
@@ -2047,10 +2550,12 @@ function allGenre() {
         select_all();
         select_each();
         checkBoxDelete();
-        allGenreDeleteBtn();
         paginationLinkListener();
     }
+
     reCallFuntions();
+    allGenreDeleteBtn();
+
 }
 
 function createGenre() {
@@ -2609,8 +3114,8 @@ function allCategory() {
             }
 
             let slugUrl = del.attr("data-slug");
-
-            if (!localStorage.getItem('askToDeleteCategory') && !confirm("You really want to delete this category?")) {
+            let confirm = confirm("You really want to delete this category?");
+            if (!localStorage.getItem('askToDeleteCategory') && !confirm) {
                 return;
             }
 
@@ -2686,7 +3191,7 @@ function allCategory() {
     //     search.trigger("input");
     // });
     function fetchCategories(search, filter, page) {
-        // wholePageLoader("on");
+        wholePageLoader("on");
         $.ajax({
             url: `/admin/category/?search=${search}&filter=${filter}&page=${page}`,
             type: "GET",
@@ -2720,9 +3225,9 @@ function allCategory() {
         select_all();
         select_each();
         checkBoxDelete();
-        allCategoryDeleteBtn();
         paginationLinkListener();
     }
+    allCategoryDeleteBtn();
     reCallFuntions();
 }
 

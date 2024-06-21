@@ -3,8 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 
-// Controllers
-
 use App\Http\Controllers\PageController;
 
 use App\Http\Controllers\Auth\AdminLogin;
@@ -19,17 +17,10 @@ use App\Http\Controllers\Api\TmdbAPI;
 //Middlewares 
 use App\Http\Middleware\AppDetails;
 use App\Http\Middleware\EnsureAdmin;
-use App\Models\Category;
-use App\Models\Genre;
-use App\Models\Post;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 Route::controller(PageController::class)->group(function () {
-    Route::get('/{slug}', 'post')->name('post');
-
     Route::get('/', 'home')->name('home');
+    Route::get('/post/{slug}', 'post')->name('post');
     Route::get('/trending', 'trending')->name('trending');
     Route::get('/genre/{slug}', 'genre')->name('genre');
     Route::get('/category/{slug}/', 'category')->name('category');
@@ -65,7 +56,9 @@ Route::prefix('/admin')->middleware([EnsureAdmin::class, AppDetails::class])->gr
         Route::get('/post/create', 'create')->name('post.create');
         Route::post('/post/create', 'handleCreate')->name('post.create.handle');
 
-        Route::get('/post/edit/', 'edit')->name('post.edit');
+        Route::get('/post/edit/', 'selectEdit')->name('post.edit');
+        Route::post('/post/edit/', 'handleEdit')->name('post.edit.handle');
+
         Route::get('/post/edit/{slug}', 'edit')->name('post.edit.withSlug');
 
         Route::get('/post/delete', 'deletePosts')->name('post.delete');
@@ -123,22 +116,3 @@ Route::prefix('/api')->middleware(EnsureAdmin::class)->group(function () {
     Route::get('/imdb/check/{id}', [ImdbAPI::class, 'check']); // Checking if url is valid
 });
 
-Route::get('/test/{name}', function ($name) {
-    // Delete all files in /public/uploads/backdrops
-    // File::cleanDirectory(public_path('uploads/backdrops'));
-
-    // Delete all files in /public/uploads/posters
-    // File::cleanDirectory(public_path('uploads/posters'));
-
-    // $check = Category::where('name', '=', $name)->get();
-    // if ($check->first() && $check->first()->id) {
-    //     return 'Category ' . $name . ' Already Exist!';
-    // }
-
-    // $category = new Category;
-    // $category->name = $name;
-    // $category->slug = Str::slug($category->name);
-    // $category->save();
-
-    // return 'Category ' . $category->name . ' Created Successfully';
-});

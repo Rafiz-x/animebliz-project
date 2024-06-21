@@ -376,7 +376,7 @@
 
                 <div class="flex fullWidth w-full flex-col gap-2 ">
                     <span class="label required font-semibold text-md">Synopsis</span>
-                    <textarea name="synopsis" id="synopsis" cols="30" rows="10" placeholder="Post Synopsis"></textarea></textarea>
+                    <textarea name="synopsis" id="synopsis" cols="30" rows="10" placeholder="Post Synopsis"></textarea>
                     <div class="error h-0 flex items-center gap-1 text-red-500 text-sm font-semibold overflow-hidden"
                         id="synopsis_error">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="size-6">
