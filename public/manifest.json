@@ -1,10 +1,10 @@
 {
-    "name": "Animebliz - Watch Anime Freely",
-    "short_name": "Animebliz",
-    "description": "Animebliz is a web based app which provides free anime(s) to watch at free of cost. With minimal    ads and user friendly UI",
+    "name": "Smoothyflix - Watch Anime Freely",
+    "short_name": "Smoothyflix",
+    "description": "Smoothyflix is a web based app which provides free anime(s) to watch at free of cost. With minimal ads and user friendly UI",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
+    "background_color": "#030e20",
     "theme_color": "#000000",
     "icons": [
         {

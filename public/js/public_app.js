@@ -1,6 +1,3 @@
-import Barba from '@barba/core';
-import gsap from 'gsap';
-
 document.addEventListener('DOMContentLoaded', () => {
   // Register service worker
   if ('serviceWorker' in navigator) {
@@ -16,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Barba.init({
     views: [{
       namespace: 'home',
-      afterEnter(data){
+      afterEnter(data) {
         homeJs();
       }
     }, {
@@ -47,11 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
       },
     }],
   });
-})
+});
 
 
 // ### START - HOME PAGE SCRIPTS ###
-function homeJs(){
+function homeJs() {
 
   const header = document.querySelector("header");
 
@@ -123,16 +120,16 @@ function homeJs(){
     }
     ball.style.backgroundColor = ballColors[0];
     ballColors.shift();
-  })
+  });
 }
-function controlLeftRightVisiblity(left, right, boolHide){
-  if(boolHide){
+function controlLeftRightVisiblity(left, right, boolHide) {
+  if (boolHide) {
     left.classList.add('pointer-events-none');
     right.classList.add('pointer-events-none');
 
     left.classList.add('opacity-0');
     right.classList.add('opacity-0');
-  }else{
+  } else {
     left.classList.remove('pointer-events-none');
     right.classList.remove('pointer-events-none');
 
@@ -154,60 +151,75 @@ function navJs() {
 
   const dropDowns = document.body.querySelectorAll(".nav .dropdown");
   dropDowns.forEach(dropDown => {
-      dropDown.addEventListener('click', () => {
-          let dropDownUL = dropDown.querySelector('ul');
+    dropDown.addEventListener('click', () => {
+      let dropDownUL = dropDown.querySelector('ul');
 
-          if (dropDown.classList.contains('opened')) {
-              dropDownUL.classList.add('hidden');
-              dropDown.classList.remove("opened");
-          } else {
-              dropDownUL.classList.remove('hidden');
-              dropDown.classList.add("opened");
-          }
-      })
-  })
+      if (dropDown.classList.contains('opened')) {
+        dropDownUL.classList.add('hidden');
+        dropDown.classList.remove("opened");
+      } else {
+        dropDownUL.classList.remove('hidden');
+        dropDown.classList.add("opened");
+      }
+    });
+  });
 
   const menuIcon = document.body.querySelector('#menuIcon');
   const closeNav = document.body.querySelector('#closeNav');
 
-  menuIcon.addEventListener('click', e => {
-      if (menuFirstAttempt) {
-          nav.classList.replace('-z-50', 'z-top');
-          nav.classList.add('transition-all');
-      }
-      if (!nav.classList.contains('activated')) {
-          nav.style.marginLeft = '0';
-          nav.classList.add('activated');
-      }
-  })
+  menuIcon.on('click', e => {
+    if (menuFirstAttempt) {
+      nav.classList.replace('-z-50', 'z-top');
+      nav.classList.add('transition-all');
+    }
+    if (!nav.classList.contains('activated')) {
+      nav.style.marginLeft = '0';
+      nav.classList.add('activated');
+    }
+  });
 
   closeNav.addEventListener('click', e => {
-      if (nav.classList.contains('activated')) {
-          nav.style.marginLeft = `-${navWidth}px`;
-          nav.classList.remove('activated');
-      }
-  })
+    if (nav.classList.contains('activated')) {
+      nav.style.marginLeft = `-${navWidth}px`;
+      nav.classList.remove('activated');
+    }
+  });
 
   navLinks.forEach(link => {
-      link.addEventListener("click", e => {
-          let activeNavLink = nav.querySelectorAll('li .active');
-          if (activeNavLink.length > 0) {
-              activeNavLink.forEach(x => {
-                  x.classList.remove('active');
-              })
-          }
-          e.target.classList.add('active');
-      })
-  })
+    link.addEventListener("click", e => {
+      let activeNavLink = nav.querySelectorAll('li .active');
+      if (activeNavLink.length > 0) {
+        activeNavLink.forEach(x => {
+          x.classList.remove('active');
+        });
+      }
+      e.target.classList.add('active');
+    });
+  });
 
+  let searchIcon = $(".searchIcon");
+  searchIcon.click(e => {
+    if (window.outerWidth <= 640) {
+      if (searchIcon.hasClass('active')) {
+        gsap.to('.searchBoxParent', { display: 'hidden' });
+        searchIcon.removClass('active');
+        searchIcon.find('.searchSVG').css('display', 'block');
+      } else {
+        gsap.to('.searchBoxParent', { display: 'block' });
+        searchIcon.addClass('active');
+        searchIcon.find('.searchSVG').css('display', 'hidden');
+
+      }
+    }
+  });
 
   // ### END - NAVIGATION SETTINGS  ####
   document.addEventListener("click", function (event) {
 
-      if (!nav.contains(event.target) && nav != event.target && menuIcon != event.target) {
-          nav.style.marginLeft = `-${navWidth}px`;
-          nav.classList.remove('activated');
-      }
+    if (!nav.contains(event.target) && nav != event.target && menuIcon != event.target) {
+      nav.style.marginLeft = `-${navWidth}px`;
+      nav.classList.remove('activated');
+    }
 
   });
 
@@ -216,99 +228,15 @@ function navJs() {
 
 // ### START - SEARCH PAGE SCRIPTS ###
 function searchJs() {
-  const searchAreaBack = document.body.querySelector("#searchAreaBack");
-  const searchArea = document.body.querySelector("#searchArea");
-  const searchSelects = document.body.querySelectorAll('#searchArea .select');
-
-  const inputBox = document.body.querySelector('#searchArea .inputBox');
-  const inputField = document.body.querySelector('#searchArea .inputBox input');
-  const inputBoxIcon = document.body.querySelector('#searchArea .inputBox .icon');
-
-  searchAreaBack.addEventListener('click', e => {
-      history.back();
-      // searchArea.classList.replace('left-0', 'left-full');
-      // searchArea.classList.remove('activated');
-      // handleBodyScrolling(false);
-  })
-
-  inputField.addEventListener('input', e => {
-      if (inputField.value.length > 0) {
-          inputBoxIcon.classList.remove('hidden');
-      } else {
-          inputBoxIcon.classList.add('hidden');
-      }
-  })
-  inputBoxIcon.addEventListener('click', e => {
-      inputField.value = '';
-      inputBoxIcon.classList.add('hidden');
-  })
-
-  // ### search select area ###
-
-  searchSelects.forEach(select => {
-      var selectBtn = select.querySelector('.selectBtn');
-      var option = select.querySelector('.option');
-      var items = option.querySelectorAll('.item');
-
-      selectBtn.addEventListener('click', e => {
-          if (select.classList.contains('activated')) {
-              option.classList.replace('h-fit', 'h-0');
-              option.classList.replace('p-1', 'p-0');
-              select.classList.remove('activated');
-          } else {
-              closeSearchSelect(); // Clossing Previously Activated Select
-              option.classList.replace('h-0', 'h-fit');
-              option.classList.replace('p-0', 'p-1');
-              select.classList.add('activated');
-          }
-      });
-
-      items.forEach(item => {
-          let input = item.querySelector('input');
-          let span = item.querySelector('span');
-          item.onclick = (e) => {
-              if (input.getAttribute('type') == 'radio') {
-                  if (!item.classList.contains('active')) {
-                      if (option.contains(option.querySelector('.active'))) {
-                          option.querySelector('.active').classList.remove('active');
-                      }
-                      item.classList.add('active');
-                      input.click();
-                  }
-              } else {
-                  e.target.classList.toggle('active');
-                  input.click();
-              }
-
-          }
-      })
-
-  })
-
-  // ### end - search select area ###
-
-
-  //  ### DOCUMENT CLICK HANDLING ### 
-  document.addEventListener("click", function (event) {
-      try {
-          let activeSelect = document.body.querySelector('#searchArea .select.activated');
-          let activeSelectBtn = document.body.querySelector('#searchArea .select.activated .selectBtn');
-          if (!activeSelect.contains(event.target) && !event.target != activeSelectBtn) {
-              closeSearchSelect();
-          }
-      } catch (err) { }
-  });
-
-  //  ### END - DOCUMENT CLICK HANDLING ### 
 }
 
 function closeSearchSelect() {
   const activeElement = document.body.querySelector('#searchArea .select.activated');
   if (activeElement) {
-      let activeOption = activeElement.querySelector('.option');
-      activeElement.classList.remove('activated');
-      activeOption.classList.replace('h-fit', 'h-0');
-      activeOption.classList.replace('p-1', 'p-0');
+    let activeOption = activeElement.querySelector('.option');
+    activeElement.classList.remove('activated');
+    activeOption.classList.replace('h-fit', 'h-0');
+    activeOption.classList.replace('p-1', 'p-0');
   }
 }
 // ### END - SEARCH PAGE SCRIPTS ###

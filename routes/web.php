@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\GenreController;
+use App\Http\Controllers\Admin\LinkController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Api\ImdbAPI;
 use App\Http\Controllers\Api\TmdbAPI;
@@ -25,7 +26,9 @@ Route::controller(PageController::class)->group(function () {
     Route::get('/genre/{slug}', 'genre')->name('genre');
     Route::get('/category/{slug}/', 'category')->name('category');
     Route::get('/mylist', 'myList')->name('myList');
-    Route::get('/search', 'search')->name('search');
+    Route::get('/search/{query}', 'search')->name('search');
+    Route::get('/login', 'userLogin')->name('user.login');
+    Route::get('/signup', 'userSignup')->name('user.signup');
 });
 
 
@@ -43,7 +46,7 @@ Route::controller(AdminLogin::class)->group(function () {
 Route::prefix('/admin')->middleware([EnsureAdmin::class, AppDetails::class])->group(function () {
 
     Route::controller(DashboardController::class)->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/', [DashboardController::class, 'dashboard'])->name('admin.dashboard');
     });
 
     Route::controller(PostController::class)->group(function () {
@@ -62,6 +65,12 @@ Route::prefix('/admin')->middleware([EnsureAdmin::class, AppDetails::class])->gr
         Route::get('/post/edit/{slug}', 'edit')->name('post.edit.withSlug');
 
         Route::get('/post/delete', 'deletePosts')->name('post.delete');
+    });
+
+    Route::controller(LinkController::class)->group(function(){
+        Route::get('/link', 'selectPost')->name('admin.links');
+        Route::get('/link/{slug}', 'postLinks')->name('admin.links.withSlug');
+        Route::post('/link', 'handlePostLinks')->name('admin.links.handlePostLinks');
     });
 
     Route::prefix('/category')->controller(CategoryController::class)->group(function () {

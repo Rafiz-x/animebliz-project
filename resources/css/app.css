@@ -3,11 +3,35 @@
 @tailwind utilities;
 
 ::-webkit-scrollbar {
-    @apply bg-slate-900 w-2;
+    @apply bg-slate-900 w-1 md:w-2;
 }
 ::-webkit-scrollbar-thumb {
-    @apply bg-slate-400 rounded-full;
+    @apply bg-slate-600 rounded-full;
 }
+
+.nav ::-webkit-scrollbar {
+    @apply bg-transparent;
+}
+.nav ::-webkit-scrollbar-thumb {
+    @apply bg-transparent;
+}
+
+input {
+    box-shadow: 0 !important;
+}
+
+.navlogo h1 {
+    animation: navLogo 10s linear infinite;
+}
+@keyframes navLogo {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
 html {
     @apply scroll-smooth;
 }
@@ -15,7 +39,7 @@ html {
     @apply select-none scroll-smooth;
 }
 body {
-    @apply bg-[#141414] pb-48;
+    @apply bg-[#141414];
     font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
         "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
         "Helvetica Neue", sans-serif;
@@ -25,31 +49,6 @@ img {
     -webkit-user-drag: none;
     -moz-window-dragging: none;
     @apply pointer-events-none select-none;
-}
-
-#hero {
-    background-position: 100% 0;
-    /* border-radius: 0% 100% 5% 85% / 80% 0% 100%0%; */
-}
-@media (min-width: 640px) {
-    #hero {
-        /* -webkit-mask-image: linear-gradient(
-            180deg,
-            transparent 0,
-            #141414 0%,
-            #141414 70%,
-            #ddd
-        );
-        mask-image: linear-gradient(
-            180deg,
-            #141414 88%,
-            rgba(0, 0, 0, 1) 80%,
-            rgba(0, 0, 0, 0.1) 100%
-        ); */
-    }
-    #hero{
-
-    }
 }
 
 #cursor {
@@ -168,15 +167,19 @@ img {
     @apply text-[16px];
 }
 
+.nav ul li span > a > div,
+.nav ul li .dropdown > span{
+    @apply w-56 sm:w-64; 
+}
 /* .nav ul li span a:not(.active) div svg[fill=currentColor]{
     @apply hidden;
 } */
 
 .nav ul li span div.active {
-    @apply bg-[#272727] hover:bg-[#4d4d4d]  active:bg-[#636363];
+    @apply bg-zinc-800 hover:bg-zinc-600; /*active:bg-[#636363];*/
 }
 .nav ul li span a.active > div {
-    @apply bg-[#272727] hover:bg-[#4d4d4d]  active:bg-[#636363];
+    @apply bg-zinc-800 hover:bg-zinc-600; /*active:bg-[#636363];*/
 }
 /* .nav ul li span a.active > div svg[fill=none]{
     @apply hidden;
@@ -194,59 +197,22 @@ img {
 .nav ul li .dropdown > ul li a:hover {
     @apply text-[#fff];
 }
-.nav ul li .dropdown ul li a {
-    @apply text-[15px];
+
+.nav ul li span {
+    @apply text-[15px] sm:text-base;
 }
+.nav ul li svg{
+    @apply !size-5 sm:!size-6;
+}
+
+.nav ul li .dropdown ul li a {
+    @apply text-sm sm:text-base;
+}
+
 .nav ul li .dropdown.opened > span > div .chevron {
     @apply rotate-180;
 }
 
-#searchArea {
-    /* border-radius: 100% 0% 0% 100% / 50% 0% 100% 50%; */
-    transform: translateY(-100px);
-    pointer-events: none;
-    /* clip-path: inset(0% 0% 0% 100%); */
-    overflow: hidden;
-    /* transition: clip-path 0.25s ease-in-out */
-}
-#searchArea .inputBox {
-    border: 2px solid #272727;
-}
-#searchArea .select.activated button svg {
-    @apply rotate-180;
-}
-#searchArea .select .selectBtn {
-    @apply hover:bg-[#5377ed] active:bg-[#4a65bd] active:scale-90 sm:p-2 xs:p-2 rounded-[4px] sm:text-sm md:text-base transition-all;
-}
-#searchArea .select .selectBtn * {
-    @apply pointer-events-none;
-}
-#searchArea .select .option {
-    @apply xs:top-10 md:top-11 rounded-sm sm:text-sm md:text-base z-[9999];
-    clip-path: inset(0 0 100% 0);
-    transition: clip-path 0.14s;
-}
-#searchArea .select .option.middle {
-    @apply left-[50%] -translate-x-[50%];
-}
-#searchArea .select .option.last {
-    @apply left-auto right-0;
-}
-#searchArea .select .option .itemParent {
-    @apply p-2;
-}
-#searchArea .select .item {
-    @apply w-fit cursor-pointer;
-}
-#searchArea .select .item * {
-    @apply pointer-events-none;
-}
-#searchArea .select .item input {
-    @apply accent-[#ff5f5f];
-}
-#searchArea .select .item.active span {
-    @apply text-[#ff5f5f];
-}
 .results .item {
     /* Apply This Style For Every Page */
     @apply hover:z-20 hover:rounded-sm bg-[#272727];
@@ -267,4 +233,62 @@ main section h1 {
     .controls {
         @apply hidden;
     }
+}
+
+@media (max-width: 640px) {
+    .searchBoxParent {
+        @apply hidden fixed w-full top-16 left-0 flex gap-2 items-center p-1 bg-gray-800 bg-opacity-80 backdrop-blur-sm;
+    }
+}
+
+.post .actions button {
+    @apply relative before:content-[''] before:absolute before:-bottom-1 before:left-[50%] before:-translate-x-[50%] before:w-0 before:h-0.5 before:bg-neutral-300 before:rounded-md before:transition-all;
+}
+
+.post .actions button.active {
+    @apply before:w-full;
+}
+
+[role="navigation"] {
+    @apply py-2;
+}
+[role="navigation"] > div:first-child {
+    @apply justify-start gap-4;
+}
+[role="navigation"] > div:first-child span {
+    @apply bg-indigo-900 border-0 text-white drop-shadow-md cursor-not-allowed;
+}
+[role="navigation"] > div:first-child a {
+    @apply bg-indigo-700 hover:bg-indigo-500 border-0 text-white drop-shadow-md;
+}
+[role="navigation"] > div:last-child {
+    @apply gap-6 lg:gap-10 px-2;
+}
+[role="navigation"] > div:last-child > div:first-child {
+    @apply flex items-center;
+}
+
+[role="navigation"] > div:last-child > div:last-child > span {
+    @apply flex gap-1;
+}
+[role="navigation"] > div:last-child > div:last-child > span > span {
+    @apply flex;
+}
+
+[role="navigation"] > div:last-child p {
+    @apply text-slate-400;
+}
+[role="navigation"] > div:last-child p > span {
+    @apply text-slate-200 bg-transparent;
+}
+
+[role="navigation"] > div:last-child > div:last-child > span span {
+    @apply rounded-md bg-indigo-900 bg-opacity-50 !border-0 ring-0 text-white drop-shadow-md cursor-not-allowed;
+}
+[role="navigation"] > div:last-child > div:last-child > span a {
+    @apply rounded-md bg-indigo-700 hover:bg-indigo-500 border-0 text-white drop-shadow-md;
+}
+
+.post .links .link h3{
+    @apply min-w-[100px];
 }

@@ -20,10 +20,3 @@ export default defineConfig({
     ],
 });
 
-// // vite.config.js
-// import { defineConfig } from 'vite';
-
-// export default defineConfig({
-//   // Adjust the base URL if your Laravel project is not served from the root
-//   base: '/',
-// });

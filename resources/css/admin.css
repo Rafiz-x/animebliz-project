@@ -560,3 +560,31 @@ textarea::-webkit-scrollbar-thumb {
 [role="navigation"] > div:last-child > div:last-child > span a {
     @apply rounded-md bg-pink-700 hover:bg-pink-500 border-0 text-white drop-shadow-md;
 }
+
+label.required,
+label.optional
+{
+    @apply relative w-fit;
+}
+label.required::after{
+    content: ' *';
+    @apply text-rose-500;
+    /* @apply absolute top-[50%] -translate-y-[50%] right-0 text-rose-600; */
+}
+
+label.optional{
+    @apply relative w-fit;
+}
+
+
+.post_links .link select{
+    @apply cursor-pointer;
+}
+.post_links .link select option{
+    @apply p-2;
+}
+
+.post_links .link:first-of-type .moves .up,
+.post_links .link:last-of-type .moves .down{
+    @apply opacity-30 pointer-events-none;
+}

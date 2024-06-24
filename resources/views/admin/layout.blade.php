@@ -17,9 +17,14 @@
 
     <link rel="manifest" href="{{ asset('manifest-admin.json') }}">
 
+    <link rel="stylesheet" href="{{ asset('css/flatpickr.css') }}">
     <link rel="stylesheet" href="{{ asset('css/select2.css') }}">
 
     <script src="{{ asset('js/jquery.js') }}"></script>
+
+    <script src="{{ asset('js/flatpickr.js') }}"></script>
+    <script src="{{ asset('/js/barba.js') }}"></script>
+    <script src="{{ asset('js/gsap.js') }}"></script>
     <script src="{{ asset('js/select2.js') }}"></script>
 
     @vite('resources/css/admin.css')
@@ -210,7 +215,16 @@
                                 </li>
                             </ul>
                         </div>
-
+                        <div class="item w-56 rounded-sm overflow-hidden">
+                            <a href="{{ route('admin.links') }}"
+                                class="flex text-white gap-5 px-4 py-2 active:scale-95 sm:active:scale-90 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                                  </svg>
+                                  
+                                <span>Post Links</span>
+                            </a>
+                        </div>
                         <div class="item w-56 rounded-sm overflow-hidden dropdown">
                             <div
                                 class="flex relative text-white gap-5 px-4 py-2 cursor-pointer active:scale-95 sm:active:scale-90 transition-all">
@@ -466,17 +480,6 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
-                        <div class="item w-56 rounded-sm overflow-hidden">
-                            <a href="#"
-                                class="flex text-white gap-5 px-4 py-2 active:scale-95 sm:active:scale-90 transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.5" stroke="currentColor" class="size-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
-                                </svg>
-                                <span>Links</span>
-                            </a>
                         </div>
                         <div class="item w-56 rounded-sm overflow-hidden">
                             <a href="#"

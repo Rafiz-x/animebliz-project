@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('posts', function (Blueprint $table) {
-            $table->boolean('publish')->nullable()->after('id');
+        Schema::table('posts', function (Blueprint $table) {            
+            // Add or modify the 'who_created' column to be nullable and position it after 'publish'
+            $table->unsignedBigInteger('who_created')->nullable()->after('publish');
+
+            // Add a foreign key constraint with onDelete('set null')
+            $table->foreign('who_created')->references('id')->on('admins')->onDelete('set null');
         });
     }
 
@@ -22,7 +26,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('posts', function (Blueprint $table) {
-            $table->dropColumn('publish');
+            // Drop the foreign key constraint
+            $table->dropForeign(['who_created']);
+            $table->dropColumn('who_created');
         });
     }
 };

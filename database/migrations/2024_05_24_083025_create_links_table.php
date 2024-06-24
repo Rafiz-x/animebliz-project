@@ -13,7 +13,20 @@ return new class extends Migration
     {
         Schema::create('links', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('post_id');  // Define post_id
+            $table->string('name');
+            $table->text('url');
+            $table->string('type');
+            $table->string('language');
+            $table->string('quality');
             $table->timestamps();
+
+            $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
+
+            // Indexes
+            $table->index('post_id');
+            $table->index('language');
+            $table->index('quality');
         });
     }
 

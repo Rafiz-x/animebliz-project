@@ -1,7 +1,3 @@
-@php
-    $DONT_SHOW_MENU_SEARCH = false;
-@endphp
-
 @extends('home.master')
 
 @section('title', "Trending | $APP_NAME")

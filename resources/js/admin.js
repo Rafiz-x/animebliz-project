@@ -1,9 +1,3 @@
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.min.css";
-
-import Barba from "@barba/core";
-import gsap from "gsap";
-
 const TMDB_IMG_W_154 = "https://image.tmdb.org/t/p/w154";
 const TMDB_IMG_W_185 = "https://image.tmdb.org/t/p/w185";
 const TMDB_IMG_W_342 = "https://image.tmdb.org/t/p/w342";
@@ -538,7 +532,7 @@ function createPost() {
     formSetting("#mainForm");
     formSetting(".modal");
 
-    $(document).on('keyup', e => {
+    $(document).on("keyup", (e) => {
         let event = e.originalEvent;
         log(event);
         if (event.keyCode === 13 && event.ctrlKey) {
@@ -548,11 +542,10 @@ function createPost() {
 }
 
 function finishCreatedPost(res) {
-
     $("#mainForm").trigger("reset"); //* Reseting Modal Form Previous Values
     $("#mainForm select").change(); //* Triggering Change to reset Select2 Value(s)
-    $("#mainForm input").trigger('input'); //* Triggering Input
-    gsapAlert('Post Created Successfully', 'green');
+    $("#mainForm input").trigger("input"); //* Triggering Input
+    gsapAlert("Post Created Successfully", "green");
 
     return;
     const post = res.post;
@@ -695,8 +688,8 @@ function formSetting(nodeSelector) {
             var title = $(this)
                 .val()
                 .toLowerCase()
-                .replace(/\s+/g, "-")
-                .replace(/[^a-z0-9-]/g, "");
+                .replace(/[^a-z0-9]+/g, "-");
+
             $("#mainForm #slug").val(title);
         }
     });
@@ -1532,23 +1525,15 @@ document.addEventListener("DOMContentLoaded", (e) => {
         localStorage.setItem("work_area_scroll", e.target.scrollTop);
     };
 
-
-    $('.sidebar a').click(e => {
+    $(".sidebar a").click((e) => {
         if (window.innerWidth >= 640) {
             sidebarArrow.click();
         } else {
             menu.click();
         }
-
     });
 
-    // createPost();
-    // allGenre();
-    // createGenre();
-    // selectEditGenre();
-    // editGenre();
-
-    Barba.init({
+    barba.init({
         views: [
             {
                 namespace: "post_create",
@@ -1578,7 +1563,6 @@ document.addEventListener("DOMContentLoaded", (e) => {
                 namespace: "genre_edit",
                 afterEnter(data) {
                     selectEditGenre();
-
                 },
             },
             {
@@ -1603,33 +1587,44 @@ document.addEventListener("DOMContentLoaded", (e) => {
                 namespace: "category_edit",
                 afterEnter(data) {
                     selectEditCategory();
-
                 },
             },
             {
                 namespace: "post_all",
                 afterEnter(data) {
                     allPost();
-
                 },
             },
             {
                 namespace: "post_edit_select",
                 afterEnter(data) {
                     selectEditPost();
-
                 },
             },
             {
                 namespace: "post_edit",
                 afterEnter(data) {
                     editPost();
-
+                },
+            },
+            {
+                namespace: "links_select_post",
+                afterEnter(data) {
+                    linkSelectPost();
+                },
+            },
+            {
+                namespace: "post_links",
+                afterEnter(data) {
+                    postLinks();
                 },
             },
         ],
         prevent: ({ el }) => {
-            return el.classList.contains('prevent-barba') || el.closest('[role="navigation"]');
+            return (
+                el.classList.contains("prevent-barba") ||
+                el.closest('[role="navigation"]')
+            );
         },
         transitions: [
             {
@@ -1655,9 +1650,6 @@ document.addEventListener("DOMContentLoaded", (e) => {
                     setTimeout(() => {
                         page_title_heading.text($("#current_page_title").val());
                     }, 500);
-
-
-
                 },
                 async once(data) {
                     // Your initial transition code here
@@ -1672,16 +1664,326 @@ document.addEventListener("DOMContentLoaded", (e) => {
         ],
     });
 
-    window.barba = Barba;
+    window.barba = barba;
 
     $(".loading-overlay").addClass("hidden");
-    $('.sidebarArrow ').click();
-
+    $(".sidebarArrow ").click();
 });
 
+function postLinks() {
+    const form = $('form');
+
+    let linkCount = $(".link").length;
+
+    $(`#link_type`).select2({
+        width: "100%",
+        dropdownAutoWidth: true,
+    });
+
+
+
+    form.on('submit', e => {
+        wholePageLoader("on"); // Turning on the page loader;
+
+        e.preventDefault(); // Prevent the form from submitting the default way
+
+        let formData = new FormData(form[0]);
+
+
+
+        $.ajax({
+            url: form.attr("action"),
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('input[name="_token"]').val()
+
+            },
+            success: function (res) {
+                wholePageLoader("off"); // Turning off the page loader
+
+                if (res.success) {
+                    gsapAlert(res.msg, "green");
+                } else {
+                    gsapAlert(res.msg, "red");
+                }
+            },
+            error: function (xhr, status, error) {
+                wholePageLoader("off"); // Turning off the page loader;
+
+                if (xhr.status == 422) {
+                    let errors = xhr.responseJSON;
+                    let style =
+                        Object.keys(errors).length > 1 ||
+                            errors[Object.keys(errors)[0]].length > 1
+                            ? "all: revert;"
+                            : ""; // Checking If the object has one key and that has one value
+
+                    let txt = `<ol style="${style}" class="flex flex-col gap-2 pr-2">`;
+
+                    for (const key in errors) {
+                        if (errors.hasOwnProperty(key)) {
+                            errors[key].forEach((error) => {
+                                txt += `<li class='pl-1'>${error}</li>`;
+                            });
+                        }
+                    }
+
+                    txt += "</ol>";
+                    gsapAlert(txt, "red", 4, true);
+                } else {
+                    gsapAlert(
+                        "Failed with error code: " + xhr.status + ` (${error})`,
+                        "red"
+                    );
+                }
+            },
+        });
+    });
+
+    function updateLinkSetting() {
+        const totalLinks = $(".link").length;
+
+        if (totalLinks == 0) {
+            linkCount = 0;
+            $('.links .add_link').replaceClass('inline-flex', 'hidden');
+            $('.links_not_found').replaceClass('hidden', 'inline-flex');
+        }
+
+        if (totalLinks == 1) {
+            $('.links .add_link').replaceClass('hidden', 'inline-flex');
+            $('.links_not_found').replaceClass('inline-flex', 'hidden');
+        }
+    }
+
+    function addLink() {
+        linkCount++;
+        const newLink = `
+                <div class="link flex gap-5">
+                    <div class="info hidden sm:block">
+                        <span class="text-amber-500 font-mono text-lg lg:text-xl">${linkCount}.</span>
+                    </div>
+                    <div class="grid w-full flex-1 grid-cols-1 sm:grid-cols-2 gap-2">
+
+                        <div class="info mx-auto w-full flex items-center justify-between sm:hidden">
+                            <span class="text-amber-500 font-mono text-lg lg:text-xl">No. ${linkCount}</span>
+
+                              <div class="actions flex sm:hidden gap-4">
+                                <div class="moves flex gap-2 sm:flex-row">
+                                    <div class="up p-2 text-white w-fit h-fit rounded-full bg-slate-500 hover:bg-slate-600 active:bg-slate-700 cursor-pointer transition-colors"
+                                                title="Move This Link Up">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-0width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                                        </svg>
+                                        </div>
+                                            <div class="down p-2 text-white w-fit h-fit rounded-full bg-slate-500 hover:bg-slate-600 active:bg-slate-700 cursor-pointer transition-colors"
+                                                title="Move This Link Down">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="delete p-2 text-white w-fit h-fit rounded-full bg-rose-500 hover:bg-rose-600 active:bg-rose-700 cursor-pointer transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                            </svg>
+                                        </div>
+                            </div>
+
+                        </div>
+
+                        <div class="field sm:col-span-2 w-full flex flex-col gap-1.5 text-neutral-300">
+                            <label for="link_name_${linkCount}" class="required text-slate-200">Name</label>
+                            <input type="text" name="link_name[]" id="link_name_${linkCount}" placeholder="Link Name"
+                                class="bg-slate-900 text-white ring-1 focus:!ring-2 focus:!ring-neutral-400 ring-neutral-400 rounded-md">
+                        </div>
+                        <div class="field w-full flex flex-col gap-1.5 text-neutral-300">
+                            <label for="link_url_${linkCount}" class="required text-slate-200">URL</label>
+                            <input type="text" name="link_url[]" id="link_url_${linkCount}" placeholder="Link URL"
+                                class="bg-slate-900 text-white ring-1 focus:!ring-2 focus:!ring-neutral-400 ring-neutral-400 rounded-md">
+                        </div>
+                        <div class="field w-full flex flex-col gap-1.5 text-neutral-300">
+                            <label for="link_type_${linkCount}" class="text-slate-200">Type</label>
+                            <select name="link_type[]" id="link_type_${linkCount}" class="bg-slate-900 text-white ring-1 focus:!ring-2 focus:!ring-neutral-400 ring-neutral-400 rounded-md">
+                                <option value="Unknown" selected>Default : Unknown</option>
+                                <option value="Direct">Direct</option>
+                                <option value="GDrive">GDrive</option>
+                                <option value="Mega">Mega</option>
+                                <option value="1Drive">1Drive</option>
+                                <option value="GDflix">GDflix</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="field w-full flex flex-col gap-1.5 text-neutral-300">
+                            <label for="link_lang_${linkCount}" class="text-slate-200">Language</label>
+                            <input type="text" name="link_lang[]" id="link_lang_${linkCount}" placeholder="Default : Unknown"
+                                class="bg-slate-900 text-white ring-1 focus:!ring-2 focus:!ring-neutral-400 ring-neutral-400 rounded-md">
+                        </div>
+                        <div class="field w-full flex flex-col gap-1.5 text-neutral-300">
+                            <label for="link_quality_${linkCount}" class="text-slate-200">Quality</label>
+                            <input type="text" name="link_quality[]" id="link_quality_${linkCount}" placeholder="Default : Unknown"
+                                class="bg-slate-900 text-white ring-1 focus:!ring-2 focus:!ring-neutral-400 ring-neutral-400 rounded-md">
+                        </div>
+                    </div>
+                     <div class="actions hidden sm:flex flex-col gap-4 mt-8 sm:mt-6">
+                        <div class="moves flex gap-2 flex-col sm:flex-row">
+                            <div class="up p-2 text-white w-fit h-fit rounded-full bg-slate-500 hover:bg-slate-600 active:bg-slate-700 cursor-pointer transition-colors"
+                                        title="Move This Link Up">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                                </svg>
+                                 </div>
+                                    <div class="down p-2 text-white w-fit h-fit rounded-full bg-slate-500 hover:bg-slate-600 active:bg-slate-700 cursor-pointer transition-colors"
+                                        title="Move This Link Down">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div
+                                    class="delete p-2 text-white w-fit h-fit rounded-full bg-rose-500 hover:bg-rose-600 active:bg-rose-700 cursor-pointer transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="size-6 pointer-events-none">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </div>
+                            </div>
+                </div>`;
+        $(".links form").append(newLink);
+
+        $(`#link_type_${linkCount}`).select2({
+            width: "100%",
+            dropdownAutoWidth: true,
+        });
+        updateLinkSetting();
+    }
+
+    function moveLinkUp(link) {
+        const prevLink = link.prev(".link");
+        if (prevLink.length !== 0) {
+            link.insertBefore(prevLink);
+            updateLinkSetting();
+        }
+    }
+
+    function moveLinkDown(link) {
+        const nextLink = link.next(".link");
+        if (nextLink.length !== 0) {
+            link.insertAfter(nextLink);
+            updateLinkSetting();
+        }
+    }
+
+    $(".add_link").on("click", function (e) {
+        e.preventDefault();
+        addLink();
+    });
+
+    $(document).on("click", ".up", function () {
+        const link = $(this).closest(".link");
+        moveLinkUp(link);
+    });
+
+    $(document).on("click", ".down", function () {
+        const link = $(this).closest(".link");
+        moveLinkDown(link);
+    });
+
+    $(document).on('click', '.link .delete', function () {
+        if (confirm('Are you sure you want to delete this link?')) {
+            $(this).closest('.link').remove();
+            updateLinkSetting();
+        }
+    });
+
+    $('#submitBtn').click(e => {
+        const totalLinks = $(".link").length;
+
+        if (totalLinks > 0) {
+            if(confirm('Do you really want to make changes?')){
+                form.trigger('submit');
+            }
+        } else {
+            if (confirm('Do you really want to submit empty?')) {
+                form.trigger('submit');
+            }
+        }
+    });
+
+    updateLinkSetting();
+}
+
+function linkSelectPost() {
+    const search = $("#post_search");
+    const filter = $(".search_filter select");
+
+    filter.select2();
+    function paginationLinkListener() {
+        let anchors = document.body.querySelectorAll(
+            ".links_select_post [role=navigation] a"
+        );
+
+        // Loop through each anchor
+        anchors.forEach((anchor) => {
+            anchor.addEventListener("click", (e) => {
+                e.preventDefault();
+                let href = anchor.href;
+                let page = href.split("page=")[1];
+                let searchVal = encodeURIComponent(search.val());
+                let filterVal = encodeURIComponent(filter.val());
+                fetchPosts(searchVal, filterVal, page);
+            });
+        });
+    }
+    function fetchPosts(search, filter, page) {
+        wholePageLoader("on");
+        $.ajax({
+            url: `/admin/link?search=${search}&filter=${filter}&page=${page}`,
+            type: "GET",
+            success: function (res) {
+                wholePageLoader("off");
+                $(".posts_to_select").html(res.html);
+                reCallFuntions();
+            },
+            error: function (xhr, status, error) {
+                wholePageLoader("off");
+                gsapAlert("Error Occured with status:" + xhr.status);
+            },
+        });
+    }
+
+    search.on("input", (e) => {
+        const searchVal = encodeURIComponent($(e.target).val());
+        const filterVal = encodeURIComponent(filter.val());
+        fetchPosts(searchVal, filterVal, 1);
+    });
+
+    filter.on("change", () => {
+        search.trigger("input");
+    });
+
+    function reCallFuntions() {
+        paginationLinkListener();
+    }
+
+    reCallFuntions();
+}
+
 function allPost() {
-
-
     const search = $("#post_search");
     const filter = $(".search_filter select");
 
@@ -1689,61 +1991,69 @@ function allPost() {
 
     function select_all() {
         const select_all_post = $("#select_all_post");
-        const checkBoxes = $(".all_post input[type=checkbox]").not(select_all_post);
+        const checkBoxes = $(".all_post input[type=checkbox]").not(
+            select_all_post
+        );
 
         select_all_post.on("change", (e) => {
             if (select_all_post.is(":checked")) {
-                checkBoxes.prop('checked', true);
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
+                checkBoxes.prop("checked", true);
+                gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
             } else {
-                checkBoxes.prop('checked', false);
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
+                checkBoxes.prop("checked", false);
+                gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
             }
         });
     }
 
     function select_each() {
         const select_all_post = $("#select_all_post");
-        $(".all_post input[type=checkbox]").not(select_all_post).on('change', e => {
-            let checked = $(".all_post input[type=checkbox]:checked").not(select_all_post);
-            if (checked.length > 0) {
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
-            } else {
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-            }
-        });
+        $(".all_post input[type=checkbox]")
+            .not(select_all_post)
+            .on("change", (e) => {
+                let checked = $(".all_post input[type=checkbox]:checked").not(
+                    select_all_post
+                );
+                if (checked.length > 0) {
+                    gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
+                } else {
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
+                }
+            });
     }
 
     function checkBoxDelete() {
-        $('.checkBoxDelete').click(e => {
-            wholePageLoader('on');
+        $(".checkBoxDelete").click((e) => {
+            wholePageLoader("on");
 
-            let checked = $(".all_post input[type=checkbox]:checked").not(select_all_post);
+            let checked = $(".all_post input[type=checkbox]:checked").not(
+                select_all_post
+            );
 
             if (checked.length > 0) {
-                let userConfirm = confirm(`Are you sure to delete ${checked.length} post(s)?`);
+                let userConfirm = confirm(
+                    `Are you sure to delete ${checked.length} post(s)?`
+                );
 
                 if (userConfirm) {
-                    localStorage.setItem('askToDeletePost', true);
+                    localStorage.setItem("askToDeletePost", true);
 
-                    checked.each(index => {
+                    checked.each((index) => {
                         let checkbox = $(checked[index]);
-                        let deleteEach = checkbox.closest('tr').find('.delete');
+                        let deleteEach = checkbox.closest("tr").find(".delete");
                         deleteEach.click();
                     });
 
-                    localStorage.removeItem('askToDeletePost');
-                    gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
+                    localStorage.removeItem("askToDeletePost");
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
                 }
-
             } else {
-                gsapAlert('No item selected!', 'red');
+                gsapAlert("No item selected!", "red");
             }
 
-            wholePageLoader('off');
+            wholePageLoader("off");
         });
     }
-
 
     function allPostDeleteBtn() {
         $(".all_post table .delete").click((e) => {
@@ -1761,7 +2071,10 @@ function allPost() {
 
             let slugUrl = del.attr("data-slug");
 
-            if (!localStorage.getItem('askToDeletePost') && !confirm("You really want to delete this post?")) {
+            if (
+                !localStorage.getItem("askToDeletePost") &&
+                !confirm("You really want to delete this post?")
+            ) {
                 return;
             }
 
@@ -1794,11 +2107,13 @@ function allPost() {
     }
 
     function paginationLinkListener() {
-        let anchors = document.body.querySelectorAll(".all_post [role=navigation] a");
+        let anchors = document.body.querySelectorAll(
+            ".all_post [role=navigation] a"
+        );
 
         // Loop through each anchor
-        anchors.forEach(anchor => {
-            anchor.addEventListener('click', e => {
+        anchors.forEach((anchor) => {
+            anchor.addEventListener("click", (e) => {
                 e.preventDefault();
                 let href = anchor.href;
                 let page = href.split("page=")[1];
@@ -1835,7 +2150,7 @@ function allPost() {
     // });
     function fetchPosts(search, filter, page) {
         wholePageLoader("on");
-        gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
+        gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
         $.ajax({
             url: `/admin/post/?search=${search}&filter=${filter}&page=${page}`,
             type: "GET",
@@ -1843,7 +2158,6 @@ function allPost() {
                 wholePageLoader("off");
                 $(".table").html(res.html);
                 reCallFuntions();
-
             },
             error: function (xhr, status, error) {
                 wholePageLoader("off");
@@ -1861,8 +2175,6 @@ function allPost() {
     filter.on("change", () => {
         search.trigger("input");
     });
-
-
 
     function reCallFuntions() {
         select_all();
@@ -1890,7 +2202,6 @@ function selectEditPost() {
                 wholePageLoader("off");
                 $(".select_edit_post .result").html(res.html);
                 reCallFuntions();
-
             },
             error: function (xhr, status, error) {
                 wholePageLoader("off");
@@ -1900,11 +2211,13 @@ function selectEditPost() {
     }
 
     function paginationLinkListener() {
-        let anchors = document.body.querySelectorAll(".select_edit_post [role=navigation] a");
+        let anchors = document.body.querySelectorAll(
+            ".select_edit_post [role=navigation] a"
+        );
 
         // Loop through each anchor
-        anchors.forEach(anchor => {
-            anchor.addEventListener('click', e => {
+        anchors.forEach((anchor) => {
+            anchor.addEventListener("click", (e) => {
                 e.preventDefault();
                 let href = anchor.href;
                 let page = href.split("page=")[1];
@@ -1925,15 +2238,12 @@ function selectEditPost() {
         search.trigger("input");
     });
 
-
-
     function reCallFuntions() {
         paginationLinkListener();
     }
 
     reCallFuntions();
 }
-
 
 function editPost() {
     const apiInputBtns = document.body.querySelectorAll(
@@ -2378,7 +2688,7 @@ function editPost() {
     formSetting("#mainForm");
     formSetting(".modal");
 
-    $(document).on('keyup', e => {
+    $(document).on("keyup", (e) => {
         let event = e.originalEvent;
         log(event);
         if (event.keyCode === 13 && event.ctrlKey) {
@@ -2386,13 +2696,8 @@ function editPost() {
         }
     });
 
-    $('input[type=url]').trigger('input');
+    $("input[type=url]").trigger("input");
 }
-
-
-
-
-
 
 function allGenre() {
     const search = $("#genre_search");
@@ -2403,16 +2708,17 @@ function allGenre() {
     function select_all() {
         const select_all_genre = $("#select_all_genre");
 
-        const checkBoxes = $(".all_genre input[type=checkbox]").not(select_all_genre);
+        const checkBoxes = $(".all_genre input[type=checkbox]").not(
+            select_all_genre
+        );
 
         select_all_genre.on("change", (e) => {
             if (select_all_genre.is(":checked")) {
-                checkBoxes.prop('checked', true);
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
+                checkBoxes.prop("checked", true);
+                gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
             } else {
-                checkBoxes.prop('checked', false);
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-
+                checkBoxes.prop("checked", false);
+                gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
             }
         });
     }
@@ -2420,44 +2726,51 @@ function allGenre() {
     function select_each() {
         const select_all_genre = $("#select_all_genre");
 
-        $(".all_genre input[type=checkbox]").not(select_all_genre).on('change', e => {
-            let checked = $(".all_genre input[type=checkbox]:checked").not(select_all_genre);
-            if (checked.length > 0) {
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
-            } else {
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-            }
-        });
+        $(".all_genre input[type=checkbox]")
+            .not(select_all_genre)
+            .on("change", (e) => {
+                let checked = $(".all_genre input[type=checkbox]:checked").not(
+                    select_all_genre
+                );
+                if (checked.length > 0) {
+                    gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
+                } else {
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
+                }
+            });
     }
 
     function checkBoxDelete() {
-        $('.checkBoxDelete').click(e => {
-            let checked = $(".all_genre input[type=checkbox]:checked").not(select_all_genre);
+        $(".checkBoxDelete").click((e) => {
+            let checked = $(".all_genre input[type=checkbox]:checked").not(
+                select_all_genre
+            );
             if (checked.length > 0) {
-                if (confirm(`Are you sure to delete ${checked.length} genre(s)?`)) {
-                    localStorage.setItem('askToDeleteGenre', true);
+                if (
+                    confirm(
+                        `Are you sure to delete ${checked.length} genre(s)?`
+                    )
+                ) {
+                    localStorage.setItem("askToDeleteGenre", true);
 
-                    checked.each(index => {
+                    checked.each((index) => {
                         let checkbox = $(checked[index]);
-                        let deleteEach = checkbox.closest('tr').find('.delete');
+                        let deleteEach = checkbox.closest("tr").find(".delete");
                         deleteEach.click();
                     });
 
-                    localStorage.removeItem('askToDeleteGenre');
-                    gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-
+                    localStorage.removeItem("askToDeleteGenre");
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
                 }
-
             } else {
-                gsapAlert('No item selected!', 'red');
+                gsapAlert("No item selected!", "red");
             }
         });
     }
 
-
     function allGenreDeleteBtn() {
-        $(".all_genre table .delete").off('click');
-        $(".all_genre table .delete").on('click', e => {
+        $(".all_genre table .delete").off("click");
+        $(".all_genre table .delete").on("click", (e) => {
             let del = $(e.target);
 
             if (!del.attr("data-slug")) {
@@ -2467,7 +2780,10 @@ function allGenre() {
 
             let slugUrl = del.attr("data-slug");
 
-            if (!localStorage.getItem('askToDeleteGenre') && !confirm("You really want to delete this genre?")) {
+            if (
+                !localStorage.getItem("askToDeleteGenre") &&
+                !confirm("You really want to delete this genre?")
+            ) {
                 return;
             }
 
@@ -2500,11 +2816,13 @@ function allGenre() {
     }
 
     function paginationLinkListener() {
-        let anchors = document.body.querySelectorAll(".all_genre [role=navigation] a");
+        let anchors = document.body.querySelectorAll(
+            ".all_genre [role=navigation] a"
+        );
 
         // Loop through each anchor
-        anchors.forEach(anchor => {
-            anchor.addEventListener('click', e => {
+        anchors.forEach((anchor) => {
+            anchor.addEventListener("click", (e) => {
                 e.preventDefault();
                 let href = anchor.href;
                 let page = href.split("page=")[1];
@@ -2525,7 +2843,6 @@ function allGenre() {
                 $(".table").html(res.html);
 
                 reCallFuntions();
-
             },
             error: function (xhr, status, error) {
                 wholePageLoader("off");
@@ -2544,8 +2861,6 @@ function allGenre() {
         search.trigger("input");
     });
 
-
-
     function reCallFuntions() {
         select_all();
         select_each();
@@ -2555,7 +2870,6 @@ function allGenre() {
 
     reCallFuntions();
     allGenreDeleteBtn();
-
 }
 
 function createGenre() {
@@ -2721,7 +3035,7 @@ function selectEditGenre() {
     select_genre.on("change", (e) => {
         const val = select_genre.val();
         if (val) {
-            Barba.go("/admin/genre/edit/" + val);
+            barba.go("/admin/genre/edit/" + val);
         }
     });
 }
@@ -3037,10 +3351,7 @@ function checkCreateGenreSlug() {
     }, 500);
 }
 
-
 function allCategory() {
-
-
     const search = $("#category_search");
     const filter = $(".search_filter select");
 
@@ -3048,56 +3359,63 @@ function allCategory() {
 
     function select_all() {
         const select_all_category = $("#select_all_category");
-        const checkBoxes = $(".all_category input[type=checkbox]").not(select_all_category);
+        const checkBoxes = $(".all_category input[type=checkbox]").not(
+            select_all_category
+        );
 
         select_all_category.on("change", (e) => {
             if (select_all_category.is(":checked")) {
-                checkBoxes.prop('checked', true);
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
+                checkBoxes.prop("checked", true);
+                gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
             } else {
-                checkBoxes.prop('checked', false);
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-
+                checkBoxes.prop("checked", false);
+                gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
             }
         });
     }
 
     function select_each() {
         const select_all_category = $("#select_all_category");
-        $(".all_category input[type=checkbox]").not(select_all_category).on('change', e => {
-            let checked = $(".all_category input[type=checkbox]:checked").not(select_all_category);
-            if (checked.length > 0) {
-                gsap.to('.checkBoxDelete', { bottom: 0, duration: 0.25 });
-            } else {
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-            }
-        });
-
+        $(".all_category input[type=checkbox]")
+            .not(select_all_category)
+            .on("change", (e) => {
+                let checked = $(
+                    ".all_category input[type=checkbox]:checked"
+                ).not(select_all_category);
+                if (checked.length > 0) {
+                    gsap.to(".checkBoxDelete", { bottom: 0, duration: 0.25 });
+                } else {
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
+                }
+            });
     }
     function checkBoxDelete() {
-        $('.checkBoxDelete').click(e => {
-            let checked = $(".all_category input[type=checkbox]:checked").not(select_all_category);
+        $(".checkBoxDelete").click((e) => {
+            let checked = $(".all_category input[type=checkbox]:checked").not(
+                select_all_category
+            );
             if (checked.length > 0) {
-                if (confirm(`Are you sure to delete ${checked.length} category(s)?`)) {
-                    localStorage.setItem('askToDeleteCategory', true);
+                if (
+                    confirm(
+                        `Are you sure to delete ${checked.length} category(s)?`
+                    )
+                ) {
+                    localStorage.setItem("askToDeleteCategory", true);
 
-                    checked.each(index => {
+                    checked.each((index) => {
                         let checkbox = $(checked[index]);
-                        let deleteEach = checkbox.closest('tr').find('.delete');
+                        let deleteEach = checkbox.closest("tr").find(".delete");
                         deleteEach.click();
                     });
 
-                    localStorage.removeItem('askToDeleteCategory');
-                    gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
-
+                    localStorage.removeItem("askToDeleteCategory");
+                    gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
                 }
-
             } else {
-                gsapAlert('No item selected!', 'red');
+                gsapAlert("No item selected!", "red");
             }
         });
     }
-
 
     function allCategoryDeleteBtn() {
         $(".all_category table .delete").click((e) => {
@@ -3115,7 +3433,7 @@ function allCategory() {
 
             let slugUrl = del.attr("data-slug");
             let confirm = confirm("You really want to delete this category?");
-            if (!localStorage.getItem('askToDeleteCategory') && !confirm) {
+            if (!localStorage.getItem("askToDeleteCategory") && !confirm) {
                 return;
             }
 
@@ -3148,14 +3466,16 @@ function allCategory() {
     }
 
     function paginationLinkListener() {
-        let anchors = document.body.querySelectorAll(".all_category [role=navigation] a");
+        let anchors = document.body.querySelectorAll(
+            ".all_category [role=navigation] a"
+        );
 
         // Loop through each anchor
-        anchors.forEach(anchor => {
-            anchor.addEventListener('click', e => {
+        anchors.forEach((anchor) => {
+            anchor.addEventListener("click", (e) => {
                 e.preventDefault();
 
-                gsap.to('.checkBoxDelete', { bottom: -80, duration: 0.25 });
+                gsap.to(".checkBoxDelete", { bottom: -80, duration: 0.25 });
 
                 let href = anchor.href;
                 let page = href.split("page=")[1];
@@ -3200,7 +3520,6 @@ function allCategory() {
                 $(".table").html(res.html);
 
                 reCallFuntions();
-
             },
             error: function (xhr, status, error) {
                 wholePageLoader("off");
@@ -3218,8 +3537,6 @@ function allCategory() {
     filter.on("change", () => {
         search.trigger("input");
     });
-
-
 
     function reCallFuntions() {
         select_all();
@@ -3394,7 +3711,7 @@ function selectEditCategory() {
     select_category.on("change", (e) => {
         const val = select_category.val();
         if (val) {
-            Barba.go("/admin/category/edit/" + val);
+            barba.go("/admin/category/edit/" + val);
         }
     });
 }

@@ -17,6 +17,7 @@ use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\PostGenre;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -26,7 +27,6 @@ class PostController extends Controller
 
     public function __construct()
     {
-
         $this->categories = $categories = Category::all(['id', 'name']);
         $this->genres = $genres = Genre::all(['id', 'name']);
     }
@@ -184,6 +184,7 @@ class PostController extends Controller
 
         // Get validated data
         $validatedData = $validator->validated();
+
 
         // Retrieve the post
         $post = Post::findOrFail($postId);
@@ -565,10 +566,13 @@ class PostController extends Controller
         }
 
         // $formattedDate = Carbon::createFromFormat('Y-m-d', '2016-11-28')->format('Y-d-m');
+        $adminId = Auth::guard('admin')->id();
 
         // Save the post
         $post = new Post();
         $post->publish = $validatedData['publish'];
+        
+        $post->who_created = $adminId;
 
         $post->imdb_id = $validatedData['imdb_id'];
         $post->tmdb_id = $validatedData['tmdb_id'];

@@ -18,8 +18,6 @@
     </thead>
 
     <tbody>
-
-
         @if ($posts->isEmpty())
             <tr >
                 <td colspan="11" class="text-white sm:text-center p-4 mx-auto">
